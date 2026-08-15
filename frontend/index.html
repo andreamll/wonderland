@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wonderland Immigration Application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Libre+Baskerville:wght@400;700&family=Cormorant+Garamond:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles_application.css" type="text/css">
+</head>
+<body>
+  <main class="scene">
+    <section class="form-panel">
+      <div class="top-banner">
+        <div class="clock">
+          <div class="clock-ring"></div>
+        </div>
+        <div class="title-wrap">
+          <h1>Wonderland Immigration Application</h1>
+        </div>
+      </div>
+
+      <p class="subtitle">
+        Welcome, traveler. <br> 
+      </p>
+
+      <div class="subtitle">
+        <p>By decree of the Honorable <em>Mr. Mad Hatter, Interior Minister</em>,
+          entry into Wonderland must now happen through proper paperwork rather than casual rabbit-hole incidents.</p>
+      </div>
+
+      <div class="notice">
+        <img src="images/hat-icon.png" height="80px" width="80px">
+        <div>
+          <strong>Official Notice from the Border Office</strong>
+          Please complete the form below. Smiling is optional. Accurate documents are not.
+        </div>
+      </div>
+
+      <form id="immigrationForm">
+        <div class="grid">
+          <div class="field full">
+            <label for="fullName">Full Name</label>
+            <input id="fullName" type="text" placeholder="Alice Liddell" required />
+          </div>
+
+          <div class="field">
+            <label for="dob">Date of Birth</label>
+            <input id="dob" type="date" required/>
+          </div>
+
+          <div class="field">
+            <label for="nationality">Nationality</label>
+            <input id="nationality" type="text" placeholder="Canadian" required />
+          </div>
+
+          <div class="field">
+            <label for="passport">Passport Number</label>
+            <input id="passport" type="text" placeholder="PA1234567" required/>
+          </div>
+
+          <div class="field">
+            <label for="visaType">Intended Visa Type</label>
+            <select id="visaType" required>
+              <option value="" selected disabled>Select one</option>
+              <option value="VISITOR">VISITOR</option>
+              <option value="STUDENT">STUDENT</option>
+              <option value="WORKER">WORKER</option>
+              <option value="PERMANENT_RESIDENT">PERMANENT RESIDENT</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Supporting Documents</label>
+            <div class="upload-box">
+              <div class="upload-title">— Upload Documents</div>
+            
+              <div id="documentsContainer">
+                <div class="upload-row">
+                  <div class="field">
+                    <label>Document Type</label>
+                    <select name="documentType[]" required>
+                      <option selected disabled>Select a document</option>
+                      <option>Passport Copy</option>
+                      <option>Income Proof</option>
+                      <option>Letter of Acceptance</option>
+                      <option>Explanation Letter</option>
+                      <option>Employment Offer</option>
+                    </select>
+                  </div>
+            
+                  <div class="field">
+                    <label>Upload File</label>
+                    <input type="file" name="documentFile[]" />
+                  </div>
+            
+                  <button class="ghost-btn remove-doc-btn" type="button">Remove</button>
+                </div>
+              </div>
+            
+              <div class="upload-actions">
+                <button id="addDocumentBtn" class="ghost-btn" type="button">Add Another</button>
+              </div>
+            
+              <div class="helper">
+                Formats accepted: PDF, JPG, PNG. Maximum file size rules may be invented by Wonderland at any time.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary-btn" type="submit">🍄 Submit Application</button>
+          <button class="ghost-btn" type="reset">Reset Form</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="story-panel">
+      
+      <div class="cards">
+        <h2 class="aside-title">A note from Cheshire Cat</h2>
+        <p class="aside-copy">
+          "I was tasked by the Minister himself to bring order to the border. No more wandering in unannounced,
+          no more dramatic entrances through teapots, mirrors, or suspicious tunnels. Forms first. Chaos later."
+        </p>
+
+        <div class="cheshire-card">
+          
+          <div>
+            <img src="images/cheshire-the-cat.png" height="400" width="400">
+          </div>
+
+          <p class="quote">
+            “Every sensible immigrant to Wonderland should know where they are going, why they are going,
+            and whether they remembered to upload their explanation letter.”
+          </p>
+
+          <div class="meta-list">
+            <div class="meta-item">
+              <span>Current border mood</span>
+              <span>Curiously strict</span>
+            </div>
+            <div class="meta-item">
+              <span>Minister in charge</span>
+              <span>Mad Hatter</span>
+            </div>
+            <div class="meta-item">
+              <span>Unauthorized rabbit holes</span>
+              <span>Forbidden</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </aside>
+  </main>
+
+  <script src="scripts/form.js"></script>
+</body>
+</html>

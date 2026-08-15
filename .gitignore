@@ -1,0 +1,12 @@
+# Environment / secrets
+.env
+
+# Maven build artifacts
+backend/target/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

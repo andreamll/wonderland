@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wonderland Visa Result</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@500;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles_result.css" type="text/css">
+</head>
+<body>
+  <main class="result-shell">
+    <section class="left-panel">
+      <div class="status-header">
+        <div class="mini-badge"><img src="images/hat-icon.png" height="40px" width="40px"> Wonderland Border Decision Office</div>
+        
+      </div>
+
+      <h1>Your Wonderland Application Has Been Received</h1>
+      <p class="subtitle">
+        Please remain calm and avoid any nearby rabbit holes while the Ministry completes its highly official,
+        slightly theatrical review.
+      </p>
+
+      <div class="processing-card" id="processingCard">
+        <div class="processing-row">
+          <span class="processing-label">Status</span>
+          <strong id="loadingStatus">Under review by the Cheshire Office<span class="dots"></span></strong>
+        </div>
+
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <p class="loading-copy" id="loadingCopy">
+          The visa officer is examining your explanation letter, passport details, and general level of whimsy.
+          A formal result will appear in approximately five seconds.
+        </p>
+      </div>
+
+      <div class="decision-card" id="decisionCard">
+        <div class="status-chip" id="statusChip">Decision</div>
+        <h2 class="decision-title" id="decisionTitle">Awaiting official ruling</h2>
+        <p class="formal-copy" id="formalCopy">
+          A formal decision has now been issued by the Wonderland Ministry of Entry.
+        </p>
+        <p class="official-reason" id="officialReason"></p>
+      </div>
+
+      <div class="reference-card" id="referenceCard" style="display:none;">
+        <div class="reference-grid">
+          <div class="reference-item">
+            <strong>Wonderland Reference Code</strong>
+            <span class="fancy-id" id="displayReference">WDL-0000-XXXX</span>
+          </div>
+
+          <div class="reference-item">
+            <strong>Official Record Number</strong>
+            <span id="displayRealId">Application ID: —</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+        <div class="right-content">
+          <h2 class="right-title">Seal of the Cheshire Office</h2>
+          <p class="right-copy">
+            This result has been reviewed, observed, and smiled upon by the office of the Cheshire Cat,
+            acting under the authority of the Ministry of Entry and with only moderate interference from the Queen.
+          </p>
+      
+          <div class="seal-card">
+            <img src="images/cheshire-seal.png" class="seal-image" alt="Official Cheshire Seal">
+      
+            <p class="seal-label">Official Cheshire Authorization</p>
+            <p class="seal-subtitle">
+              Valid for ceremonial reassurance, dramatic flourishes, and surprisingly formal immigration outcomes.
+            </p>
+          </div>
+        </div>
+
+      <a class="back-link" href="index.html">← Submit Another Application</a>
+    </aside>
+  </main>
+
+  <script src="scripts/result.js"></script>
+</body>
+</html>
