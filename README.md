@@ -18,11 +18,11 @@ The application began as a cloud computing and cybersecurity project at Douglas 
 
 The original application used a multi-layer architecture deployed on **Google Cloud Platform**:
 
-- Static HTML/CSS/JavaScript frontend hosted by Apache on a Compute Engine VM
-- Spring Boot REST API hosted on a separate Compute Engine VM
-- MySQL database hosted in Cloud SQL
-- Uploaded documents stored in Google Cloud Storage
-- GCP service-account identity used by the backend to access Cloud Storage
+* Static HTML/CSS/JavaScript frontend hosted by Apache on a Compute Engine VM
+* Spring Boot REST API hosted on a separate Compute Engine VM
+* MySQL database hosted in Cloud SQL
+* Uploaded documents stored in Google Cloud Storage
+* GCP service-account identity used by the backend to access Cloud Storage
 
 The separation allowed structured immigration data to live in a relational database while passports, explanation letters, and other supporting documents were stored as objects in a Cloud Storage bucket.
 
@@ -32,51 +32,52 @@ The Cheshire Cat approved.
 
 But it depended heavily on its original cloud environment.
 
-So Wonderland entered the rabbit hole.
-
 ---
 
 ## 🐳 Down the Docker Rabbit Hole
 
 The first modernization phase replaces the VM-dependent local architecture with containers.
 
-The current development environment consists of three services:
+The current development environment consists of three services connected through two purpose-specific Docker networks:
 
 ```text
-                    Browser
-                       │
-                       ▼
-              localhost:8081
-                       │
-                       ▼
-              ┌─────────────────┐
-              │    Frontend     │
-              │      Nginx      │
-              │ HTML / CSS / JS │
-              └─────────────────┘
-                       │
-                       │ HTTP
-                       ▼
-              ┌─────────────────┐
-              │     Backend     │
-              │   Spring Boot   │
-              │     Java 21     │
-              └─────────────────┘
-                       │
-                       │ JDBC
-                       │ db:3306
-                       ▼
-              ┌─────────────────┐
-              │      MySQL      │
-              │       8.4       │
-              └─────────────────┘
-                       │
-                       ▼
-                  mysql-data
-                 named volume
+                         Browser
+                            │
+                            │ localhost:8081
+                            ▼
+                 ┌─────────────────────┐
+                 │      Frontend       │
+                 │        Nginx        │
+                 │   HTML / CSS / JS   │
+                 └─────────────────────┘
+                            │
+                   frontend-backend
+                            │
+                            │ reverse proxy
+                            │ backend:8080
+                            ▼
+                 ┌─────────────────────┐
+                 │       Backend       │
+                 │     Spring Boot     │
+                 │       Java 21       │
+                 └─────────────────────┘
+                            │
+                   backend-database
+                            │
+                            │ JDBC
+                            │ db:3306
+                            ▼
+                 ┌─────────────────────┐
+                 │        MySQL        │
+                 │         8.4         │
+                 └─────────────────────┘
+                            │
+                            ▼
+                       mysql-data
+                      named volume
 ```
 
-Docker Compose orchestrates the environment.
+Docker Compose orchestrates the environment, while separate networks limit direct communication between application layers.
 
 ---
 
@@ -86,48 +87,130 @@ Docker Compose orchestrates the environment.
 
 The frontend is a static web application built with:
 
-- HTML
-- CSS
-- JavaScript
-- Nginx
+* HTML
+* CSS
+* JavaScript
+* Nginx
 
-Nginx serves the static resources from its container, with port `80` published locally as `8081`.
+Nginx serves the static resources from its container, with container port `80` published locally as `8081`.
+
+It also acts as a **reverse proxy** for backend API requests. The browser therefore communicates with a single application origin instead of requiring direct knowledge of the backend address.
 
 ### Backend
 
 The backend is a REST API built with:
 
-- Java 21
-- Spring Boot
-- Maven
-- Spring Data JPA
-- Hibernate
+* Java 21
+* Spring Boot
+* Maven
+* Spring Data JPA
+* Hibernate
 
 The application is packaged as an executable JAR and runs inside a Java runtime container.
+
+The backend belongs to both application networks, allowing it to communicate with the frontend layer and the database while keeping those two layers isolated from each other.
 
 ### Database
 
 Application data is stored in:
 
-- MySQL 8.4
+* MySQL 8.4
 
 The database runs in its own container and uses a Docker named volume to preserve data independently of the container lifecycle.
 
+Its MySQL port is not published to the Docker host because direct host access is not required by the application. Database communication occurs only through the `backend-database` Docker network.
+
 ---
 
-## 🐱 Docker Compose & Service Discovery
+## 🐱 Docker Networks & Service Discovery
 
-The containers are orchestrated using Docker Compose.
+Wonderland uses two Docker bridge networks:
 
-Instead of depending on hardcoded IP addresses, the backend reaches MySQL using Docker's internal DNS and the Compose service name:
+```text
+frontend-backend
+backend-database
+```
+
+Their membership is deliberately separated:
+
+```text
+frontend-backend
+├── frontend
+└── backend
+
+backend-database
+├── backend
+└── db
+```
+
+The backend participates in both networks because it acts as the application boundary between the frontend and the database.
+
+The frontend and database do not share a network and therefore cannot communicate directly.
+
+This applies **network segmentation and least-privilege connectivity**: each service receives only the network access required for its role.
+
+Docker's internal DNS provides service discovery within these networks. Instead of depending on hardcoded container IP addresses, services communicate using Compose service names.
+
+For example, the backend reaches MySQL using:
 
 ```text
 db:3306
 ```
 
-Inside a container, `localhost` refers to that container itself — not another container.
+and Nginx can reach the backend using:
 
-This allowed the original GCP database address to be removed from the application configuration.
+```text
+backend:8080
+```
+
+Container IP addresses may change when containers are recreated, while service names remain stable.
+
+Inside a container, `localhost` always refers to that container itself — not another container.
+
+---
+
+## 🪞 Through the Looking Glass — Nginx Reverse Proxy
+
+The original frontend called the backend directly using a hardcoded development URL:
+
+```javascript
+fetch("http://localhost:8080/v1/api/applications")
+```
+
+This worked locally because the JavaScript executes in the user's browser, where `localhost` refers to the Docker host, and Docker published host port `8080` to the backend container.
+
+However, this coupled frontend application code to a specific local infrastructure configuration.
+
+The frontend now uses a relative API path:
+
+```javascript
+fetch("/v1/api/applications")
+```
+
+From the browser's perspective, the request is sent back to the same origin that served the frontend:
+
+```text
+Browser
+   │
+   │ /v1/api/applications
+   ▼
+Nginx
+   │
+   │ proxy_pass
+   ▼
+backend:8080
+   │
+   ▼
+Spring Boot
+```
+
+Unlike the browser, Nginx runs inside the `frontend` container and participates in the `frontend-backend` Docker network. It can therefore resolve the `backend` service name using Docker's internal DNS.
+
+This removes the backend host and port from the frontend application code and creates a cleaner separation between **application logic and infrastructure configuration**.
+
+It also keeps frontend and API requests under the same browser origin, simplifying cross-origin communication.
+
+The same relative API path can later remain unchanged when Wonderland moves from the local Docker environment to AWS.
 
 ---
 
@@ -177,6 +260,10 @@ In other words:
 ```
 
 Even the Queen must wait for MySQL initialization.
+
+The frontend also declares a startup dependency on the backend so that Nginx can resolve its upstream service when starting.
+
+A backend healthcheck is planned as part of the next container build and runtime improvements.
 
 ---
 
@@ -235,7 +322,7 @@ The original Wonderland backend uploaded supporting documents to:
 wonderland-bucket
 ```
 
-in Google Cloud Storage. :contentReference[oaicite:1]{index=1}
+in Google Cloud Storage.
 
 When the backend ran on a Google Compute Engine VM, the application could obtain Google Application Default Credentials from the cloud environment.
 
@@ -293,6 +380,8 @@ Then visit:
 http://localhost:8081
 ```
 
+The browser communicates with the application through the frontend entry point. API requests are forwarded internally by Nginx to the Spring Boot backend.
+
 Welcome to Wonderland.
 
 Please have your passport ready.
@@ -305,22 +394,24 @@ Wonderland is still under construction.
 
 The planned journey includes:
 
-- [x] Containerize the Spring Boot backend
-- [x] Containerize MySQL
-- [x] Add persistent database storage
-- [x] Containerize the frontend with Nginx
-- [x] Orchestrate services with Docker Compose
-- [x] Externalize local configuration and credentials
-- [x] Add MySQL healthcheck
-- [x] Add health-based backend startup dependency
-- [ ] Separate frontend/backend and backend/database Docker networks
-- [ ] Remove the hardcoded frontend backend URL
-- [ ] Improve container build strategy
-- [ ] Add GitHub Actions CI/CD
-- [ ] Deploy the application to AWS
-- [ ] Replace Google Cloud Storage with Amazon S3
-- [ ] Provision infrastructure with Terraform
-- [ ] Review production secrets management and security controls
+* [x] Containerize the Spring Boot backend
+* [x] Containerize MySQL
+* [x] Add persistent database storage
+* [x] Containerize the frontend with Nginx
+* [x] Orchestrate services with Docker Compose
+* [x] Externalize local configuration and credentials
+* [x] Add MySQL healthcheck
+* [x] Add health-based backend startup dependency
+* [x] Separate frontend/backend and backend/database Docker networks
+* [x] Remove the hardcoded frontend backend URL
+* [x] Add Nginx reverse proxy for API requests
+* [ ] Improve container build strategy
+* [ ] Add backend healthcheck and improve service readiness handling
+* [ ] Add GitHub Actions CI/CD
+* [ ] Deploy the application to AWS
+* [ ] Replace Google Cloud Storage with Amazon S3
+* [ ] Provision infrastructure with Terraform
+* [ ] Review production secrets management and security controls
 
 ---
 
@@ -328,18 +419,26 @@ The planned journey includes:
 
 The original application was deliberately developed as a prototype and was later evaluated for production security concerns.
 
-Areas identified for improvement included:
+The current containerization work has already introduced:
 
-- HTTPS/TLS
-- Private database connectivity
-- Least-privilege IAM
-- Authentication and authorization
-- Server-side input validation
-- File upload validation and malware scanning
-- Rate limiting
-- Server hardening
-- Secure secrets management
-- Reduced public exposure of backend services
+* Network segmentation between application layers
+* Removal of unnecessary host exposure for MySQL
+* Externalized local credentials
+* No cloud credentials embedded in container images
+* Service readiness checks for MySQL
+
+Areas still identified for improvement include:
+
+* HTTPS/TLS
+* Private cloud networking
+* Least-privilege IAM
+* Authentication and authorization
+* Server-side input validation
+* File upload validation and malware scanning
+* Rate limiting
+* Server hardening
+* Production-grade secrets management
+* Reduced public exposure of backend services
 
 These concerns will be revisited as the application moves toward its AWS architecture.
 
@@ -357,7 +456,7 @@ Rather than building disconnected tutorial projects, each technology is being ap
 
 The goal is not simply to make Wonderland run.
 
-The goal is to understand **why it runs, how its components communicate, where it can fail, and how its infrastructure can be made reproducible and automated.**
+The goal is to understand **why it runs, how its components communicate, where it can fail, and how its infrastructure can be made reproducible, secure, and automated.**
 
 ---
 
@@ -366,3 +465,4 @@ The goal is to understand **why it runs, how its components communicate, where i
 > Visitors may arrive from any kingdom, but production traffic through unidentified rabbit holes is strictly prohibited.
 
 Built with Java, Spring Boot, MySQL, Nginx, Docker, curiosity, and occasional guidance from the Cheshire Cat. 🐱
+
