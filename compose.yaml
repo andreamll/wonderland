@@ -4,6 +4,10 @@ services:
       context: ./frontend
     ports:
       - "8081:80"
+    networks:
+      - frontend-backend
+    depends_on:
+      - backend
 
   backend:
     build:
@@ -17,6 +21,9 @@ services:
       APP_BUCKET_NAME: ${APP_BUCKET_NAME}
     ports:
       - "8080:8080"
+    networks:
+      - frontend-backend
+      - backend-database
     depends_on:
       db:
         condition: service_healthy
@@ -36,7 +43,13 @@ services:
       start_period: 20s
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - backend-database
 
 
 volumes:
   mysql-data:
+
+networks:
+  frontend-backend:
+  backend-database:

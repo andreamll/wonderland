@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
       try {
   
-        const response = await fetch("http://localhost:8080/v1/api/applications", {
+        const response = await fetch("/v1/api/applications", {
           method: "POST",
           body: formData
         });

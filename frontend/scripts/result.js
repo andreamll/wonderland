@@ -41,7 +41,7 @@ const progressBar = document.getElementById("progressBar");
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       try {
-        const response = await fetch(`http://localhost:8080/v1/api/applications/${id}`);
+        const response = await fetch(`/v1/api/applications/${id}`);
 
         if (!response.ok) {
           throw new Error("Unable to retrieve application result.");
