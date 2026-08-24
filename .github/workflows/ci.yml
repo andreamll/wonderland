@@ -1,0 +1,28 @@
+name: Wonderland CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Run Maven tests
+        working-directory: ./backend
+        run: ./mvnw test
+
+      - name: Build backend Docker image
+        run: docker build -t wonderland-backend:ci ./backend
