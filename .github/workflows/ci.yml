@@ -23,9 +23,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Run Maven tests
+      - name: Build and test backend
         working-directory: ./backend
-        run: ./mvnw test
+        run: ./mvnw package
 
       - name: Build backend Docker image
         run: docker build -t wonderland-backend:ci ./backend
