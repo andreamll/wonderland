@@ -1,6 +1,6 @@
 # 🐇 Wonderland Immigration Portal
 
-> *Down the Docker rabbit hole: a containerized full-stack application with Spring Boot, MySQL, Nginx, and Docker Compose.*
+> *Down the Docker rabbit hole: a containerized full-stack application with Spring Boot, MySQL, Nginx, Docker Compose, and GitHub Actions.*
 
 ## 🎩 Welcome to Wonderland
 
@@ -388,6 +388,76 @@ Please have your passport ready.
 
 ---
 
+## ⚙️ Through the CI Looking Glass
+
+Wonderland uses **GitHub Actions** for Continuous Integration.
+
+The CI workflow is triggered in two situations:
+
+* When a pull request targets the `main` branch
+* When changes are pushed to `main`
+
+Each workflow run executes on a GitHub-hosted Ubuntu runner and follows this validation path:
+
+```text
+GitHub event
+     │
+     ▼
+Ubuntu runner
+     │
+     ▼
+Checkout repository
+     │
+     ▼
+Set up Java 21 (Temurin)
+     │
+     ▼
+Maven package
+├── Compile
+├── Run automated tests
+└── Build application JAR
+     │
+     ▼
+Docker image build
+     │
+     ▼
+PASS / FAIL
+```
+
+The Maven build acts as the first quality gate. If compilation or automated tests fail, the job fails and the Docker image is not built.
+
+If the Maven build succeeds, the pipeline also validates that the backend Docker image can be successfully created from the resulting application artifact.
+
+The `main` branch is protected by a GitHub ruleset. Changes must be submitted through pull requests, and the required GitHub Actions `build` status check must pass before they can be merged. Force pushes to `main` are also blocked.
+
+This creates two complementary validation points:
+
+```text
+Pull Request
+     │
+     ▼
+     CI
+     │
+     ▼
+Validate before integration
+     │
+     ▼
+   Merge
+     │
+     ▼
+Push to main
+     │
+     ▼
+     CI
+     │
+     ▼
+Validate integrated state
+```
+
+The current workflow implements **Continuous Integration (CI)**. Automated delivery and deployment will be introduced later as Wonderland moves to AWS.
+
+---
+
 ## 🗺️ Modernization Roadmap
 
 Wonderland is still under construction.
@@ -405,9 +475,11 @@ The planned journey includes:
 * [x] Separate frontend/backend and backend/database Docker networks
 * [x] Remove the hardcoded frontend backend URL
 * [x] Add Nginx reverse proxy for API requests
-* [ ] Improve container build strategy
+* [x] Improve container build strategy
 * [ ] Add backend healthcheck and improve service readiness handling
-* [ ] Add GitHub Actions CI/CD
+* [x] Add GitHub Actions Continuous Integration (CI)
+* [x] Protect `main` with pull requests and required CI status checks
+* [ ] Add Continuous Delivery/Deployment (CD)
 * [ ] Deploy the application to AWS
 * [ ] Replace Google Cloud Storage with Amazon S3
 * [ ] Provision infrastructure with Terraform
@@ -419,13 +491,16 @@ The planned journey includes:
 
 The original application was deliberately developed as a prototype and was later evaluated for production security concerns.
 
-The current containerization work has already introduced:
+The current modernization work has already introduced:
 
 * Network segmentation between application layers
 * Removal of unnecessary host exposure for MySQL
 * Externalized local credentials
 * No cloud credentials embedded in container images
 * Service readiness checks for MySQL
+* Protected `main` branch with pull-request-based changes
+* Required CI validation before merge
+* Force-push protection for `main`
 
 Areas still identified for improvement include:
 
@@ -464,5 +539,4 @@ The goal is to understand **why it runs, how its components communicate, where i
 
 > Visitors may arrive from any kingdom, but production traffic through unidentified rabbit holes is strictly prohibited.
 
-Built with Java, Spring Boot, MySQL, Nginx, Docker, curiosity, and occasional guidance from the Cheshire Cat. 🐱
-
+Built with Java, Spring Boot, MySQL, Nginx, Docker, GitHub Actions, curiosity, and occasional guidance from the Cheshire Cat. 🐱
